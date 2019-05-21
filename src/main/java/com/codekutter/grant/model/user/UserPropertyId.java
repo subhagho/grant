@@ -3,8 +3,7 @@ package com.codekutter.grant.model.user;
 import lombok.Getter;
 import lombok.Setter;
 
-import javax.persistence.Column;
-import javax.persistence.Embeddable;
+import javax.persistence.*;
 import java.io.Serializable;
 
 /**
@@ -20,10 +19,11 @@ public class UserPropertyId implements Serializable, Comparable<UserPropertyId> 
     @Column(name = "user_id")
     private String userId;
     /**
-     * Property name.
+     * Property definition reference.
      */
-    @Column(name = "property")
-    private String property;
+    @OneToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "property_id")
+    private UserPropertyDef property;
 
     /**
      * Comparable - compare the user ID/property name.
@@ -37,7 +37,7 @@ public class UserPropertyId implements Serializable, Comparable<UserPropertyId> 
         if (o != null) {
             ret = userId.compareTo(o.userId);
             if (ret == 0) {
-                ret = property.compareTo(o.property);
+                ret = property.getKey().compareTo(o.property.getKey());
             }
         }
         return ret;
