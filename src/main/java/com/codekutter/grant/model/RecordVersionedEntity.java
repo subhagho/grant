@@ -4,6 +4,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import javax.persistence.Column;
+import javax.persistence.MappedSuperclass;
 import javax.persistence.Version;
 
 /**
@@ -14,6 +15,7 @@ import javax.persistence.Version;
  */
 @Getter
 @Setter
+@MappedSuperclass
 public abstract class RecordVersionedEntity<K> implements IEntity<K> {
     /**
      * Record Version field.

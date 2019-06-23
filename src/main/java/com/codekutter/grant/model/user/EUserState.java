@@ -1,7 +1,7 @@
 package com.codekutter.grant.model.user;
 
 /**
- * Enum defining the state of a recorded user.
+ * Enum defining the userState of a recorded user.
  */
 public enum EUserState {
     /**

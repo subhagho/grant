@@ -1,9 +1,7 @@
 package com.codekutter.grant.model.user;
 
-import com.codekutter.grant.model.RecordVersionedEntity;
-import com.codekutter.grant.model.Validate;
-import com.codekutter.grant.model.ValidationException;
-import com.codekutter.grant.model.ValidationExceptions;
+import com.codekutter.grant.model.*;
+import com.codekutter.grant.model.utils.CopyUtils;
 import com.codekutter.grant.model.utils.ValidationUtils;
 import lombok.Getter;
 import lombok.Setter;
@@ -77,11 +75,38 @@ public class UserProperty extends RecordVersionedEntity<UserPropertyId> {
         }
 
         errors = ValidationException
-                .checkNotEmpty("ID.userId", id.getUserId(), errors);
+                .checkNotEmpty("ID.roleId", id.getUserId(), errors);
         errors = ValidationException
                 .checkNotNull("ID.property", id.getProperty(), errors);
         if (errors != null) {
             throw errors;
         }
+    }
+
+    /**
+     * Copy the changes from the specified source entity
+     * to this instance.
+     * <p>
+     * All properties other than the Key will be copied.
+     * Copy Type:
+     * Primitive - Copy
+     * String - Copy
+     * Enum - Copy
+     * Nested Entity - Copy Recursive
+     * Other Objects - Copy Reference.
+     *
+     * @param source - Source instance to Copy from.
+     * @return - Copied Entity instance.
+     * @throws CopyException
+     */
+    @Override
+    public IEntity<UserPropertyId> copyChanges(IEntity<UserPropertyId> source)
+    throws CopyException {
+        if (!(source instanceof UserProperty)) {
+            throw new CopyException(String.format(
+                    "Cannot copy from source : Type mismatch. [type=%s]",
+                    source.getClass().getCanonicalName()));
+        }
+        return CopyUtils.copy(this, source);
     }
 }

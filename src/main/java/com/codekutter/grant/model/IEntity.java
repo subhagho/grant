@@ -20,4 +20,22 @@ public interface IEntity<K> extends IValidate {
      * @return - Comparision.
      */
     int compare(K key);
+
+    /**
+     * Copy the changes from the specified source entity
+     * to this instance.
+     *
+     * All properties other than the Key will be copied.
+     * Copy Type:
+     *  Primitive - Copy
+     *  String - Copy
+     *  Enum - Copy
+     *  Nested Entity - Copy Recursive
+     *  Other Objects - Copy Reference.
+     *
+     * @param source - Source instance to Copy from.
+     * @return - Copied Entity instance.
+     * @exception CopyException
+     */
+    IEntity<K> copyChanges(IEntity<K> source) throws CopyException;
 }

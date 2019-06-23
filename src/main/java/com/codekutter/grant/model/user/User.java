@@ -1,16 +1,12 @@
 package com.codekutter.grant.model.user;
 
-import com.codekutter.grant.model.RecordVersionedEntity;
-import com.codekutter.grant.model.Validate;
-import com.codekutter.grant.model.ValidationException;
-import com.codekutter.grant.model.ValidationExceptions;
+import com.codekutter.grant.model.*;
+import com.codekutter.grant.model.utils.CopyUtils;
 import com.codekutter.grant.model.utils.ValidationUtils;
 import lombok.Getter;
 import lombok.Setter;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.Table;
+import javax.persistence.*;
 import javax.security.auth.Subject;
 import java.security.Principal;
 import java.util.Set;
@@ -22,23 +18,71 @@ import java.util.Set;
 @Setter
 @Entity
 @Table(name = "users")
-public class User extends RecordVersionedEntity<String> implements Principal {
-    @Column(name = "user_id")
+public class User extends StatefulEntity<UserId>
+        implements Principal, TenantEntity {
+    /**
+     * Unique User ID.
+     */
+    @EmbeddedId
     @Validate
-    private String userId;
+    private UserId userId;
+    /**
+     * User name.
+     */
     @Column(name = "user_name")
     @Validate
     private String userName;
-    @Column(name = "state")
+    /**
+     * State of this user record.
+     */
+    @Column(name = "user_state")
+    @Enumerated(EnumType.STRING)
     @Validate
-    private EUserState state = EUserState.Unknown;
+    private EUserState userState = EUserState.Unknown;
+    @AttributeOverrides({
+                                @AttributeOverride(name = "updatedBy",
+                                                   column = @Column(
+                                                           name = "updated_by")),
+                                @AttributeOverride(name = "updateTimestamp",
+                                                   column = @Column(
+                                                           name = "updated_timestamp"))
+
+                        })
+    private UpdateInfo updateInfo;
+
+    /**
+     * Set of user properties.
+     */
+    @OneToMany(fetch = FetchType.EAGER)
     private Set<UserProperty> properties;
 
+    /**
+     * Get this username (User Principal)
+     *
+     * @return - User ID.
+     */
     @Override
     public String getName() {
-        return userId;
+        return userId.getUserId();
     }
 
+    /**
+     * Get the tenant this Entity definition belongs to.
+     *
+     * @return - Owner Tenant.
+     */
+    @Override
+    public Tenant getTenant() {
+        return userId.getTenant();
+    }
+
+    /**
+     * Check if this user handle is a proxy for the
+     * passed subject.
+     *
+     * @param subject - Subject instance.
+     * @return - Is Proxy?
+     */
     @Override
     public boolean implies(Subject subject) {
         if (subject != null) {
@@ -63,7 +107,7 @@ public class User extends RecordVersionedEntity<String> implements Principal {
      * @return - Entity Key.
      */
     @Override
-    public String getKey() {
+    public UserId getKey() {
         return userId;
     }
 
@@ -74,27 +118,32 @@ public class User extends RecordVersionedEntity<String> implements Principal {
      * @return - Comparision.
      */
     @Override
-    public int compare(String key) {
+    public int compare(UserId key) {
         return userId.compareTo(key);
     }
 
     /**
-     * Validate this entity instance.
+     * Validate the derived entity.
      *
-     * @throws ValidationExceptions - On validation failure will throw exception.
+     * @param errors - Errors handle.
      */
     @Override
-    public void validate() throws ValidationExceptions {
-        ValidationExceptions errors = null;
+    public ValidationExceptions validate(ValidationExceptions errors) {
         try {
             ValidationUtils.validate(getClass(), this);
+            userId.validate();
+            updateInfo.validate();
         } catch (ValidationExceptions e) {
-            errors = e;
+            if (errors == null)
+                errors = e;
+            else {
+                errors.addAll(e.getErrors());
+            }
         }
-        if (state == EUserState.Unknown) {
+        if (userState == EUserState.Unknown) {
             errors = ValidationExceptions.add(new ValidationException(
                     String.format("Invalid Property Value : State = %s",
-                                  state.name())), errors);
+                                  userState.name())), errors);
         }
         if (properties != null && !properties.isEmpty()) {
             for (UserProperty property : properties) {
@@ -105,8 +154,33 @@ public class User extends RecordVersionedEntity<String> implements Principal {
                 }
             }
         }
-        if (errors != null) {
-            throw errors;
+        return errors;
+    }
+
+    /**
+     * Copy the changes from the specified source entity
+     * to this instance.
+     * <p>
+     * All properties other than the Key will be copied.
+     * Copy Type:
+     * Primitive - Copy
+     * String - Copy
+     * Enum - Copy
+     * Nested Entity - Copy Recursive
+     * Other Objects - Copy Reference.
+     *
+     * @param source - Source instance to Copy from.
+     * @return - Copied Entity instance.
+     * @throws CopyException
+     */
+    @Override
+    public IEntity<UserId> copyChanges(IEntity<UserId> source)
+    throws CopyException {
+        if (!(source instanceof User)) {
+            throw new CopyException(String.format(
+                    "Cannot copy from source : Type mismatch. [type=%s]",
+                    source.getClass().getCanonicalName()));
         }
+        return CopyUtils.copy(this, source);
     }
 }

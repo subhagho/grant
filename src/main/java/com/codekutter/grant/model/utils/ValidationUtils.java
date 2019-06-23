@@ -70,8 +70,8 @@ public class ValidationUtils {
     /**
      * Get/Create a validator instance based on the classname.
      *
-     * @param classanme
-     * @return
+     * @param classanme - Validator Class
+     * @return - Validator Instance.
      * @throws Exception
      */
     private static IValidationConstraint getConstraint(String classanme) throws Exception {
