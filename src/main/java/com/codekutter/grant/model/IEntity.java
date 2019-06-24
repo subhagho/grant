@@ -1,5 +1,7 @@
 package com.codekutter.grant.model;
 
+import com.codekutter.zconfig.common.Context;
+
 /**
  * Interface for defining entities.
  *
@@ -38,4 +40,14 @@ public interface IEntity<K> extends IValidate {
      * @exception CopyException
      */
     IEntity<K> copyChanges(IEntity<K> source) throws CopyException;
+
+    /**
+     * Clone this instance of Entity.
+     *
+     *
+     * @param context - Clone Context.
+     * @return - Cloned Instance.
+     * @throws CopyException
+     */
+    IEntity<K> clone(Context context) throws CopyException;
 }
